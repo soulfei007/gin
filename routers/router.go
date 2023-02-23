@@ -4,6 +4,9 @@ import (
 	"gin-learn/pkg/setting"
 	"gin-learn/routers/api"
 	v1 "gin-learn/routers/api/v1"
+	"net/http"
+
+	"gin-learn/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,10 +16,12 @@ func InitRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger()) //用中间件、
 	r.Use(gin.Recovery())
-	gin.SetMode(setting.RunMode)
 
+	gin.SetMode(setting.ServerSetting.RunMode)
+
+	r.StaticFS("/upload/images", http.Dir(upload.GetImageFullPath()))
 	r.GET("/auth", api.GetAuth) //客户端验证获取token
-
+	r.POST("/upload", api.UploadImage)
 	apiv1 := r.Group("/api/v1") //分组路由
 	//apiv1.Use(jwt.JWT())        //分组路由中间件验证token
 	{
@@ -41,4 +46,5 @@ func InitRouter() *gin.Engine {
 		apiv1.DELETE("/articles/:id")
 	}
 	return r
+
 }

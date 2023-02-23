@@ -32,7 +32,7 @@ func GetTags(c *gin.Context) {
 	}
 
 	code := e.SUCCESS
-	data["lists"] = models.GetTags(util.GetPage(c), setting.PageSize, maps)
+	data["lists"] = models.GetTags(util.GetPage(c), setting.AppSetting.PageSize, maps)
 	data["total"] = models.GetTagTotal(maps)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -127,6 +127,7 @@ func EditTag(c *gin.Context) {
 //删除文章标签
 
 func DeleteTag(c *gin.Context) {
+
 	id := com.StrTo(c.Param("id")).MustInt()
 
 	valid := validation.Validation{}
@@ -148,4 +149,5 @@ func DeleteTag(c *gin.Context) {
 		"msg":  e.GetMsg(code),
 		"data": make(map[string]string),
 	})
+
 }

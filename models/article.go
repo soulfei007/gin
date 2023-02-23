@@ -37,9 +37,9 @@ func GetArticleTotal(maps interface{}) (count int) {
 	return
 }
 
-func GetArticles(pageNum int, pageSize int, maps interface{}) (articles []Article) {
+func GetArticles(pageNum int, pageSize int, maps interface{}) (err error, articles []*Article) {
 	db.Preload("Tag").Where(maps).Offset(pageNum).Limit(pageSize).Find(&articles)
-	return
+	return nil, articles
 }
 
 func GetArticle(id int) (article Article) {
@@ -83,4 +83,10 @@ func (article *Article) BeforeCreate(scope *gorm.Scope) error {
 func (article *Article) BeforeUpdate(scope *gorm.Scope) error {
 	scope.SetColumn("ModifiedOn", time.Now().Unix())
 	return nil
+}
+
+//
+func ClearAllArticle() bool {
+	db.Unscoped().Where("deleted_on != ?", 0).Delete(&Article{})
+	return true
 }

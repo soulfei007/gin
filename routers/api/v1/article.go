@@ -1,14 +1,13 @@
 package v1
 
 import (
-	"log"
-	"net/http"
-
 	"gin-learn/models"
 	"gin-learn/pkg/e"
 	"gin-learn/pkg/logging"
 	"gin-learn/pkg/setting"
 	"gin-learn/pkg/util"
+	"log"
+	"net/http"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,6 @@ import (
 )
 
 //获取单个文章
-
 func GetArticle(c *gin.Context) {
 	id := com.StrTo(c.Param("id")).MustInt()
 
@@ -26,7 +24,6 @@ func GetArticle(c *gin.Context) {
 	code := e.INVALID_PARAMS
 	var data interface{}
 	if !valid.HasErrors() {
-
 		if models.ExistArticleByID(id) {
 			data = models.GetArticle(id)
 			code = e.SUCCESS
@@ -40,11 +37,10 @@ func GetArticle(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"coode": code,
-		"msg":   e.GetMsg(code),
-		"date":  data,
+		"code": code,
+		"msg":  e.GetMsg(code),
+		"data": data,
 	})
-
 }
 
 //获取多个文章
@@ -71,7 +67,7 @@ func GetArticles(c *gin.Context) {
 	code := e.INVALID_PARAMS
 	if !valid.HasErrors() {
 		code = e.SUCCESS
-		data["lists"] = models.GetArticles(util.GetPage(c), setting.PageSize, maps)
+		data["lists"], _ = models.GetArticles(util.GetPage(c), setting.AppSetting.PageSize, maps)
 		data["total"] = models.GetArticleTotal(maps)
 	} else {
 		for _, err := range valid.Errors {

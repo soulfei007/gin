@@ -2,45 +2,57 @@ package logging
 
 import (
 	"fmt"
-	"log"
+	"gin-learn/pkg/file"
+	"gin-learn/pkg/setting"
 	"os"
 	"time"
 )
 
 var (
-	LogSavePath = "runtime/logs/"
-	LogSaveName = "log"
-	LogFileExt  = "log"
-	TimeFormat  = "2006-01-02"
+	//mian 包导入logging包，logging全局变量先初始化，这时只是 加载包没有执行到main 包 setting.Steup(),不能获取到这些变量
+	LogSavePath string
+	LogSaveName string
+	LogFileExt  string
+	TimeFormat  string
 )
 
 func getLogFilePath() string {
-
-	return fmt.Sprintf("%s", LogSavePath)
-
+	return fmt.Sprintf("%s%s", setting.AppSetting.RuntimeRootPath, setting.AppSetting.LogSavePath)
 }
 
-func getLogFileFullPath() string {
-	prefixPath := getLogFilePath()
-	suffixPath := fmt.Sprintf("%s%s.%s", LogSaveName, time.Now().Format(TimeFormat), LogFileExt)
-	return fmt.Sprintf("%s%s", prefixPath, suffixPath)
+func getLogFileName() string {
+	return fmt.Sprintf("%s%s.%s",
+		setting.AppSetting.LogSaveName,
+		time.Now().Format(setting.AppSetting.TimeFormat),
+		setting.AppSetting.LogFileExt,
+	)
 }
 
-func openLogFile(filePath string) *os.File {
-	_, err := os.Stat(filePath) //返回包含的文件信息
-
-	switch {
-	case os.IsNotExist(err):
-		mkDir()
-	case os.IsPermission(err):
-		log.Fatalf("Permission :%v", err)
-	}
-
-	handle, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func openLogFile(fileName, filePath string) (*os.File, error) {
+	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Fail to OpenFile :%v", err)
+		return nil, fmt.Errorf("os.Getwd err: %v", err)
 	}
-	return handle
+
+	src := dir + "/" + filePath
+	perm := file.CheckPermission(src)
+
+	if perm == true {
+		return nil, fmt.Errorf("file.CheckPermission Permission denied src: %s", src)
+	}
+
+	err = file.IsNotExistMkDir(src)
+	if err != nil {
+		return nil, fmt.Errorf("file.IsNotExistMkDir src: %s, err: %v", src, err)
+	}
+
+	f, err := file.Open(src+fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to OpenFile :%v", err)
+	}
+
+	return f, nil
+
 }
 
 func mkDir() {
